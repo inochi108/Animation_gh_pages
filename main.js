@@ -82,7 +82,7 @@ function Ryuu(game, spritesheet) {
     this.shoot = false;
 }
 Ryuu.prototype.draw = function () {
-    
+
     this.shooting.drawFrame(this.game.clockTick, this.ctx, this.x, this.y + 300);
 }
 
@@ -92,7 +92,9 @@ Ryuu.prototype.update = function () {
     }
     if (this.shoot) {
         if (this.shooting.isDone()) {
+
             this.game.addEntity(new Fireball(this.game, AM.getAsset("./img/Hadouken.png")));
+            document.getElementById("iceball").play();
             this.shooting.elapsedTime = 0;
         }
         this.shoot = false;
@@ -112,6 +114,12 @@ Fireball.prototype.draw = function () {
     this.animation.drawFireball(this.game.clockTick, this.ctx, this.x + 70, this.y + 290);
 }
 Fireball.prototype.update = function () {
+    if (this.animation.isDone()) {
+        document.getElementById("iceball").pause();
+    }
+    if(this.x > 800) {
+        thisremoveFromWorld = true;
+    }
     this.x += 5;
 }
 
@@ -128,6 +136,6 @@ AM.downloadAll(function () {
     var ryuu = new Ryuu(gameEngine, AM.getAsset("./img/Hadouken.png"));
     gameEngine.addEntity(ryuu);
     gameEngine.addEntity(new Fireball(gameEngine, AM.getAsset("./img/Hadouken.png")));
-
+    document.getElementById("iceball").play();
     console.log("All Done!");
 });
