@@ -22,26 +22,14 @@ function Animation(spriteSheet, frameWidth, frameHeight, frameDuration, frames, 
 
 Animation.prototype.drawFrame = function (tick, ctx, x, y) {
     this.elapsedTime += tick;
-    
-    if (this.isDone()) {
-//        this.elapsedTime = 0;
-        this.waitFireBall = true;
-        this.waitRyuu = false;
 
-        ctx.drawImage(this.spriteSheet,
-                3 * this.frameWidth, 0 * this.frameHeight, // source from sheet
-                this.frameWidth, this.frameHeight,
-                x, y,
-                this.frameWidth,
-                this.frameHeight);
-        return;
-    }
     var frame = this.currentFrame();
     var xindex = 0;
     var yindex = 0;
-
-    xindex = frame % 4;
-    console.log(frame + " " + xindex + " " + yindex);
+    if (!this.isDone()) {
+        xindex = frame % 4;
+    }
+//    console.log(frame + " " + xindex + " " + yindex);
 
     ctx.drawImage(this.spriteSheet,
             xindex * this.frameWidth, yindex * this.frameHeight, // source from sheet
@@ -59,11 +47,11 @@ Animation.prototype.drawFireball = function (tick, ctx, x, y) {
     var frame = this.currentFrame();
     var xindex = 0;
     var yindex = 0;
-    
+
     xindex = frame % 4;
     yindex = Math.floor(frame / 4) + 1;
 
-    console.log("The y index is " + yindex);
+//    console.log("The y index is " + yindex);
 
     ctx.drawImage(this.spriteSheet,
             xindex * this.fireBallFrameWidth, yindex * this.fireBallFrameHeight, // source from sheet
@@ -81,27 +69,35 @@ Animation.prototype.isDone = function () {
     return (this.elapsedTime >= this.totalTime);
 }
 
-function MushroomDude(game, spritesheet) {
+function Ryuu(game, spritesheet) {
     //Animation(spritesheet, frameWidth, frameHeight, frameDuration, frames, loop, reverse)
-    this.animation = new Animation(spritesheet, 150, 100, .1, 4, true, false);
+    this.shooting = new Animation(spritesheet, 150, 100, .05, 4, true, false);
+
     this.shot = false;
     this.x = 0;
     this.y = 0;
     this.game = game;
     this.ctx = game.ctx;
+    this.timer = 0;
+    this.shoot = false;
 }
-MushroomDude.prototype.draw = function () {
-//    console.log("drawing");
-    this.animation.drawFrame(this.game.clockTick, this.ctx, 0, 300);
+Ryuu.prototype.draw = function () {
+    
+    this.shooting.drawFrame(this.game.clockTick, this.ctx, this.x, this.y + 300);
 }
-MushroomDude.prototype.update = function () {
-    this.x += 0;
-    if (this.animation.isDone() && !this.shot) {
-        this.shot = true;
-        var fireBall = new Fireball(this.game, AM.getAsset("./img/Hadouken.png"));
 
-        this.game.addEntity(fireBall);
+Ryuu.prototype.update = function () {
+    if (this.game.space) {
+        this.shoot = true;
     }
+    if (this.shoot) {
+        if (this.shooting.isDone()) {
+            this.game.addEntity(new Fireball(this.game, AM.getAsset("./img/Hadouken.png")));
+            this.shooting.elapsedTime = 0;
+        }
+        this.shoot = false;
+    }
+
 }
 
 function Fireball(game, spritesheet) {
@@ -113,16 +109,10 @@ function Fireball(game, spritesheet) {
     this.ctx = game.ctx;
 }
 Fireball.prototype.draw = function () {
-//    console.log("drawing");
     this.animation.drawFireball(this.game.clockTick, this.ctx, this.x + 70, this.y + 290);
 }
 Fireball.prototype.update = function () {
     this.x += 5;
-    if(this.x >= 800) {
-        this.game.entities = [];
-        var ryuu = new MushroomDude(this.game, AM.getAsset("./img/Hadouken.png"));
-        this.game.addEntity(ryuu);
-    }
 }
 
 AM.queueDownload("./img/Hadouken.png");
@@ -135,12 +125,9 @@ AM.downloadAll(function () {
     gameEngine.init(ctx);
     gameEngine.start();
 
-
-    var ryuu = new MushroomDude(gameEngine, AM.getAsset("./img/Hadouken.png"));
+    var ryuu = new Ryuu(gameEngine, AM.getAsset("./img/Hadouken.png"));
     gameEngine.addEntity(ryuu);
-//    var fireBall = new Fireball(gameEngine, AM.getAsset("./img/Hadouken.png"));
-//    gameEngine.addEntity(fireBall);
-
+    gameEngine.addEntity(new Fireball(gameEngine, AM.getAsset("./img/Hadouken.png")));
 
     console.log("All Done!");
 });
